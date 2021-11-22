@@ -4,7 +4,6 @@ import tensorflow_hub as hub
 import re
 import math
 from collections import Counter
-from matplotlib import pyplot as plt
 import pandas as pd
 import numpy as np
 import logging
@@ -17,13 +16,14 @@ stop_words = stopwords.words('english')
 logging.basicConfig(level=logging.INFO)
 
 
-# ## Experiment 2
 if 'glove' not in globals():
     logging.info('loading model')
     glove = api.load("glove-wiki-gigaword-50")
 
 if 'google' not in globals():
     google = hub.load("https://tfhub.dev/google/universal-sentence-encoder/4")
+
+# Experiment 1: Frequency Counter
 
 
 def counter_embedding(text):
@@ -61,6 +61,7 @@ def get_vectors_from_dict(x):
 
     return joined['0_x'].values, joined['0_y'].values
 
+# Experiment 2: Glove Embeddings
 
 def glove_embedding(word):
     """choose from multiple models
@@ -83,6 +84,8 @@ def get_cosine_sim(x):
 
 if __name__ == '__main__':
 
+    # Example of how code works:
+
     text1 = """Ohio State vs. Michigan State score, takeaways: Buckeyes obliterate Spartans, make strong playoff statement - Ohio State tore through Michigan State's defense on its way to an impactful win"""
     text2 = """The Ohio State Buckeyes football team competes as part of the NCAA Division I Football Bowl Subdivision, representing The Ohio State University in the East Division of the Big Ten Conference. Ohio State has played their home games at Ohio Stadium in Columbus, Ohio since 1922. The Buckeyes are recognized by the university and NCAA as having won eight national championships (including six wire-service: AP or Coaches) along with 41 conference championships (including 39 Big"""
     text3 = """Ohio ( (listen)) is a state in the Midwestern region of the United States. Of the fifty states, it is the 34th-largest by area, and with a population of nearly 11.8 million, is the seventh-most populous and tenth-most densely populated. The state's capital and largest city is Columbus, with the Columbus metro area, Greater Cincinnati, and Greater Cleveland being the largest metropolitan areas. Ohio is bordered by Lake Erie to the north, Pennsylvania to the"""
@@ -102,6 +105,7 @@ if __name__ == '__main__':
     logging.info('Experiment 2')
     google_vectors = google(clean_texts)
 
+    # https://towardsdatascience.com/use-cases-of-googles-universal-sentence-encoder-in-production-dd5aaab4fc15#:%7E:text=The%20Universal%20Sentence%20Encoder%20encodes,and%20other%20natural%20language%20tasks.&text=It%20comes%20with%20two%20variations,Deep%20Averaging%20Network%20(DAN).
     google_similarities = np.inner(google_vectors[0], google_vectors[1:])
     print(google_similarities)
     plot_sim(google_vectors[0], google_vectors[1:])
