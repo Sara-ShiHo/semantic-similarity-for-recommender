@@ -29,7 +29,7 @@ def remove_low_tfidf(text):
     return ' '.join([word for word in text.split(' ') if word not in least])
 
 
-def dfidf_run():
+def tfidf_run():
 
     news = list(labeled['news'].unique())
     clean_news = [clean_text(n) for n in news]
@@ -55,6 +55,7 @@ if __name__ == '__main__':
     labeled = labeled.fillna('')
 
     # Define X and y
+    # X is the distance between news and wiki text as vectors
     X = labeled['news'].apply(get_vector) - labeled['wiki'].apply(get_vector)
     X = pd.DataFrame(X.to_list())
 

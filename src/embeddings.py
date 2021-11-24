@@ -2,7 +2,6 @@ import gensim.downloader as api
 from scipy import spatial
 import tensorflow_hub as hub
 import re
-import math
 from collections import Counter
 import pandas as pd
 import numpy as np
@@ -10,10 +9,8 @@ import logging
 
 from helpers import clean_text, plot_sim
 
-from nltk.corpus import stopwords
-stop_words = stopwords.words('english')
-
-logging.basicConfig(level=logging.INFO)
+logger = logging.getLogger(__name__)
+logger.setLevel(logging.INFO)
 
 
 if 'glove' not in globals():
@@ -27,46 +24,27 @@ if 'google' not in globals():
 
 
 def counter_embedding(text):
-    word = re.compile(r"\w+")
-    words = word.findall(text)
+    """ return Counter object with frequency of words"""
+    words = re.compile(r"\w+").findall(text)
     return Counter(words)
 
 
-def get_cosine(x):
+def get_vectors_from_count(vec1, vec2):
+    """ align Counter objects by converting them to series, then merging """
+    df1 = pd.DataFrame.from_dict(vec1, orient='index', columns=['vec1'])
+    df2 = pd.DataFrame.from_dict(vec2, orient='index', columns=['vec2'])
 
-    vec1 = counter_embedding(x[0])
-    vec2 = counter_embedding(x[1])
+    joined = pd.merge(df1, df2,
+                      left_index=True, right_index=True,
+                      how='outer').fillna(0)
 
-    intersection = set(vec1.keys()) & set(vec2.keys())
-    numerator = sum([vec1[x] * vec2[x] for x in intersection])
-
-    sum1 = sum([vec1[x] ** 2 for x in list(vec1.keys())])
-    sum2 = sum([vec2[x] ** 2 for x in list(vec2.keys())])
-    denominator = math.sqrt(sum1) * math.sqrt(sum2)
-
-    if not denominator:
-        return 0.0
-    return float(numerator) / denominator
-
-
-def get_vectors_from_dict(x):
-    vec1 = counter_embedding(x[0])
-    vec2 = counter_embedding(x[1])
-
-    df1 = pd.DataFrame.from_dict(vec1, orient='index')
-    df2 = pd.DataFrame.from_dict(vec2, orient='index')
-
-    joined = pd.merge(df1, df2, left_index=True,
-                      right_index=True, how='outer').fillna(0)
-
-    return joined['0_x'].values, joined['0_y'].values
+    return joined['vec1'].values, joined['vec2'].values
 
 # Experiment 2: Glove Embeddings
 
+
 def glove_embedding(word):
-    """choose from multiple models
-    https://github.com/RaRe-Technologies/gensim-data
-    """
+    """choose from https://github.com/RaRe-Technologies/gensim-data """
     try:
         return glove[word]
     except KeyError:
@@ -78,14 +56,15 @@ def get_vectors_glove(s):
                             for i in s.split(' ')]), axis=0)
 
 
-def get_cosine_sim(x):
-    return 1 - spatial.distance.cosine(x[0], x[1])
+def get_cosine_sim(vec1, vec2):
+    return 1 - spatial.distance.cosine(vec1, vec2)
 
 
 if __name__ == '__main__':
 
-    # Example of how code works:
+    # Example of how code works
 
+    # set up example data
     text1 = """Ohio State vs. Michigan State score, takeaways: Buckeyes obliterate Spartans, make strong playoff statement - Ohio State tore through Michigan State's defense on its way to an impactful win"""
     text2 = """The Ohio State Buckeyes football team competes as part of the NCAA Division I Football Bowl Subdivision, representing The Ohio State University in the East Division of the Big Ten Conference. Ohio State has played their home games at Ohio Stadium in Columbus, Ohio since 1922. The Buckeyes are recognized by the university and NCAA as having won eight national championships (including six wire-service: AP or Coaches) along with 41 conference championships (including 39 Big"""
     text3 = """Ohio ( (listen)) is a state in the Midwestern region of the United States. Of the fifty states, it is the 34th-largest by area, and with a population of nearly 11.8 million, is the seventh-most populous and tenth-most densely populated. The state's capital and largest city is Columbus, with the Columbus metro area, Greater Cincinnati, and Greater Cleveland being the largest metropolitan areas. Ohio is bordered by Lake Erie to the north, Pennsylvania to the"""
@@ -93,19 +72,32 @@ if __name__ == '__main__':
 
     clean_texts = [clean_text(s) for s in [text1, text2, text3, text4]]
 
+    # Experiment 1: Obtain vectors based on word count
+    logger.info('Experiment 1: Count frequency vectors')
+
+    counts = [counter_embedding(text) for text in clean_texts]
+    count_vector_pairs = [get_vectors_from_count(counts[0], count_dict)
+                          for count_dict in counts[1:]]
+    count_similarities = [get_cosine_sim(vectors[0], vectors[1])
+                          for vectors in count_vector_pairs]
+    print(count_similarities)
+    print(np.shape(count_vector_pairs))
+    plot_sim(count_vector_pairs, fileinfo='count_vectorizer_sim')
+
     # Experiment 2: Glove Embedding
-    logging.info('Experiment 1')
+    logger.info('Experiment 2: Glove embedding')
     glove_vectors = [get_vectors_glove(text) for text in clean_texts]
-    glove_similarities = [get_cosine_sim([glove_vectors[0], vec])
+    glove_similarities = [get_cosine_sim(glove_vectors[0], vec)
                           for vec in glove_vectors[1:]]
     print(glove_similarities)
-    plot_sim(glove_vectors[0], glove_vectors[1:])
+    plot_sim([[glove_vectors[0], vec] for vec in glove_vectors[1:]],
+             fileinfo='glove_embedding_sim')
 
     # Experiment 3: Google Embedding
-    logging.info('Experiment 2')
+    logger.info('Experiment 3: Google Universal Sentence Encoder')
     google_vectors = google(clean_texts)
 
-    # https://towardsdatascience.com/use-cases-of-googles-universal-sentence-encoder-in-production-dd5aaab4fc15#:%7E:text=The%20Universal%20Sentence%20Encoder%20encodes,and%20other%20natural%20language%20tasks.&text=It%20comes%20with%20two%20variations,Deep%20Averaging%20Network%20(DAN).
     google_similarities = np.inner(google_vectors[0], google_vectors[1:])
     print(google_similarities)
-    plot_sim(google_vectors[0], google_vectors[1:])
+    plot_sim([[google_vectors[0], vec] for vec in google_vectors[1:]],
+             fileinfo='google_encoding_sim')

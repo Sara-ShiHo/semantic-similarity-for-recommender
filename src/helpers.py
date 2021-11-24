@@ -1,6 +1,7 @@
 from unidecode import unidecode
 import string
 from matplotlib import pyplot as plt
+import numpy as np
 
 from nltk.corpus import stopwords
 stop_words = stopwords.words('english')
@@ -17,20 +18,31 @@ def clean_text(text):
     return clean_text
 
 
-def plot_sim(base_vec, compare_vecs):
+def plot_sim(vecs, fileinfo='plot'):
+    """ vecs is a list of paired vectors
+    [
+        [vec1, vec2],
+        [vec3, vec4],
+        ...
+    ]
+    """
+
     plt.figure(figsize=(15, 5))
 
-    max_ax = max([max(v) for v in compare_vecs] + [max(base_vec)])
-    min_ax = min([min(v) for v in compare_vecs] + [min(base_vec)])
+    # max_ax = np.max(vecs)
+    # min_ax = np.min(vecs)
 
-    n = len(compare_vecs)
-    for i in range(n):
-        plt.subplot(1, n, i+1)
-        plt.scatter(base_vec, compare_vecs[i])
+    n = len(vecs)
+    i = 1
+    for pair in vecs:
+        plt.subplot(1, n, i)
+        plt.scatter(pair[0], pair[1])
+        i += 1
 
         # format plot
         plt.xlabel('base')
         plt.ylabel('compare')
-        plt.xlim(min_ax - abs(min_ax) * 0.1, max_ax + max_ax * 0.1)
-        plt.ylim(min_ax - abs(min_ax) * 0.1, max_ax + max_ax * 0.1)
-    plt.show()
+        # plt.xlim(min_ax - abs(min_ax) * 0.1, max_ax + max_ax * 0.1)
+        # plt.ylim(min_ax - abs(min_ax) * 0.1, max_ax + max_ax * 0.1)
+
+    plt.savefig(f'../images/{fileinfo}.png')
