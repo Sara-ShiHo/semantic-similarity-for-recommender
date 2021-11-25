@@ -1,13 +1,14 @@
-import gensim.downloader as api
-from scipy import spatial
-import tensorflow_hub as hub
 import re
 from collections import Counter
-import pandas as pd
-import numpy as np
 import logging
 
-from helpers import clean_text, plot_sim
+from scipy import spatial
+import pandas as pd
+import numpy as np
+import tensorflow_hub as hub
+import gensim.downloader as api
+
+from process import clean_text, plot_sim
 
 logger = logging.getLogger(__name__)
 logger.setLevel(logging.INFO)
@@ -65,12 +66,12 @@ if __name__ == '__main__':
     # Example of how code works
 
     # set up example data
-    text1 = """Ohio State vs. Michigan State score, takeaways: Buckeyes obliterate Spartans, make strong playoff statement - Ohio State tore through Michigan State's defense on its way to an impactful win"""
-    text2 = """The Ohio State Buckeyes football team competes as part of the NCAA Division I Football Bowl Subdivision, representing The Ohio State University in the East Division of the Big Ten Conference. Ohio State has played their home games at Ohio Stadium in Columbus, Ohio since 1922. The Buckeyes are recognized by the university and NCAA as having won eight national championships (including six wire-service: AP or Coaches) along with 41 conference championships (including 39 Big"""
-    text3 = """Ohio ( (listen)) is a state in the Midwestern region of the United States. Of the fifty states, it is the 34th-largest by area, and with a population of nearly 11.8 million, is the seventh-most populous and tenth-most densely populated. The state's capital and largest city is Columbus, with the Columbus metro area, Greater Cincinnati, and Greater Cleveland being the largest metropolitan areas. Ohio is bordered by Lake Erie to the north, Pennsylvania to the"""
-    text4 = """The Planetary Society is an American internationally-active non-governmental nonprofit organization. It is involved in research, public outreach, and political space advocacy for engineering projects related to astronomy, planetary science, and space exploration.  It was founded in 1980 by Carl Sagan, Bruce Murray, and Louis Friedman, and has about 60,000 members from more than 100 countries around the world.The Society is dedicated to the exploration of the Solar System, the search for near-Earth objects, and"""
+    BASE = """Ohio State vs. Michigan State score, takeaways: Buckeyes obliterate Spartans, make strong playoff statement - Ohio State tore through Michigan State's defense on its way to an impactful win"""
+    TEXT1 = """The Ohio State Buckeyes football team competes as part of the NCAA Division I Football Bowl Subdivision, representing The Ohio State University in the East Division of the Big Ten Conference. Ohio State has played their home games at Ohio Stadium in Columbus, Ohio since 1922. The Buckeyes are recognized by the university and NCAA as having won eight national championships (including six wire-service: AP or Coaches) along with 41 conference championships (including 39 Big"""
+    TEXT2 = """Ohio ( (listen)) is a state in the Midwestern region of the United States. Of the fifty states, it is the 34th-largest by area, and with a population of nearly 11.8 million, is the seventh-most populous and tenth-most densely populated. The state's capital and largest city is Columbus, with the Columbus metro area, Greater Cincinnati, and Greater Cleveland being the largest metropolitan areas. Ohio is bordered by Lake Erie to the north, Pennsylvania to the"""
+    TEXT3 = """The Planetary Society is an American internationally-active non-governmental nonprofit organization. It is involved in research, public outreach, and political space advocacy for engineering projects related to astronomy, planetary science, and space exploration.  It was founded in 1980 by Carl Sagan, Bruce Murray, and Louis Friedman, and has about 60,000 members from more than 100 countries around the world.The Society is dedicated to the exploration of the Solar System, the search for near-Earth objects, and"""
 
-    clean_texts = [clean_text(s) for s in [text1, text2, text3, text4]]
+    clean_texts = [clean_text(s) for s in [BASE, TEXT1, TEXT2, TEXT3]]
 
     # Experiment 1: Obtain vectors based on word count
     logger.info('Experiment 1: Count frequency vectors')

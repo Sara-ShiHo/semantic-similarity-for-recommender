@@ -29,9 +29,6 @@ def plot_sim(vecs, fileinfo='plot'):
 
     plt.figure(figsize=(15, 5))
 
-    # max_ax = np.max(vecs)
-    # min_ax = np.min(vecs)
-
     n = len(vecs)
     i = 1
     for pair in vecs:
@@ -42,7 +39,5 @@ def plot_sim(vecs, fileinfo='plot'):
         # format plot
         plt.xlabel('base')
         plt.ylabel('compare')
-        # plt.xlim(min_ax - abs(min_ax) * 0.1, max_ax + max_ax * 0.1)
-        # plt.ylim(min_ax - abs(min_ax) * 0.1, max_ax + max_ax * 0.1)
 
     plt.savefig(f'../images/{fileinfo}.png')
