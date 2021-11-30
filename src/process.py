@@ -1,7 +1,7 @@
-from unidecode import unidecode
 import string
+
+from unidecode import unidecode
 from matplotlib import pyplot as plt
-import numpy as np
 
 from nltk.corpus import stopwords
 stop_words = stopwords.words('english')
@@ -13,9 +13,9 @@ def clean_text(text):
     text = text.replace("'s", '')
     lower_text = text.translate(str.maketrans(
         '', '', string.punctuation)).lower()
-    clean_text = ' '.join(
+    cleaned_text = ' '.join(
         [w for w in lower_text.split(' ') if w not in stop_words])
-    return clean_text
+    return cleaned_text
 
 
 def plot_sim(vecs, fileinfo='plot'):
