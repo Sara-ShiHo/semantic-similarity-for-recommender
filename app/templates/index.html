@@ -17,8 +17,7 @@
     <table class="table">
         <thead>
             <tr>
-                <th style="width: 30%">News</th>
-                <th style="width: 30%">Input</th>
+                <th style="width: 45%">News</th>
                 <th>Relevant</th>
                 <th>Irrelevant</th>
             </tr>
@@ -28,7 +27,6 @@
             {% for obj in results %}
             <tr style="padding:10%">
                 <td>{{ obj.news }}</td>
-                <td>{{ obj.input }}</td>
                 <td style="color:darkgreen">
                     {% for para in obj.relevant %}
                         <p>"{{para}}"</p>
