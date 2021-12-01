@@ -1,7 +1,6 @@
 import string
 
 from unidecode import unidecode
-from matplotlib import pyplot as plt
 from sklearn.feature_extraction.text import TfidfVectorizer
 import numpy as np
 import pandas as pd
@@ -18,30 +17,6 @@ def clean_text(text):
     lower_text = text.translate(str.maketrans("", "", string.punctuation)).lower()
     cleaned_text = " ".join([w for w in lower_text.split(" ") if w not in stop_words])
     return cleaned_text
-
-
-def plot_sim(vecs, fileinfo="plot"):
-    """vecs is a list of paired vectors
-    [
-        [vec1, vec2],
-        [vec3, vec4],
-        ...
-    ]
-    """
-
-    plt.figure(figsize=(15, 5))
-
-    n = len(vecs)
-    i = 1
-    for pair in vecs:
-        plt.subplot(1, n, i)
-        plt.scatter(pair[0], pair[1])
-        i += 1
-
-        plt.xlabel("base")
-        plt.ylabel("compare")
-
-    plt.savefig(f"../images/{fileinfo}.png")
 
 
 def tfidf_transform(vectorizer, text):
@@ -86,4 +61,5 @@ if __name__ == "__main__":
 
     text = "Biden warns against Omicron panic, pledges no new lockdowns -  President Joe Biden urged Americans on Monday not to panic about the new COVID-19 Omicron variant and said the United States was making contingency plans with pharmaceutical companies if new vaccines are needed."
     print(text)
-    print(remove_low_tfidf(vectorizer, text))
+    print(clean_text(text))
+    print(remove_low_tfidf(vectorizer, clean_text(text)))

@@ -48,3 +48,9 @@ if __name__ == "__main__":
     labeled = labeled.fillna("")
 
     summarize(labeled)
+
+    test1 = pd.read_csv("../data/wikinews_11-24-2021.csv")
+    test2 = pd.read_csv("../data/wikinews_11-29-2021.csv")
+    test = test1.append(test2)
+    test = test.fillna("")
+    summarize(test1)

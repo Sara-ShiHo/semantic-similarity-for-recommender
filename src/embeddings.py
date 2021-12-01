@@ -5,10 +5,11 @@ import logging
 from scipy import spatial
 import pandas as pd
 import numpy as np
+from matplotlib import pyplot as plt
 import tensorflow_hub as hub
 import gensim.downloader as api
 
-from process import clean_text, plot_sim
+from process import clean_text
 
 logger = logging.getLogger(__name__)
 logger.setLevel(logging.INFO)
@@ -20,6 +21,32 @@ if "glove" not in globals():
 
 if "google" not in globals():
     google = hub.load("https://tfhub.dev/google/universal-sentence-encoder/4")
+
+
+def plot_sim(vecs, fileinfo="plot", legendinfo=[], titleinfo=[]):
+    """vecs is a list of paired vectors
+    [
+        [vec1, vec2],
+        [vec3, vec4],
+        ...
+    ]
+    """
+
+    plt.figure(figsize=(15, 5))
+
+    n = len(vecs)
+    i = 1
+    for pair, label, title in zip(vecs, legendinfo, titleinfo):
+        plt.subplot(1, n, i)
+        plt.scatter(pair[0], pair[1])
+        i += 1
+
+        plt.title(title + '\n' + label)
+        plt.xlabel("baseline")
+        plt.ylabel(title)
+
+    plt.savefig(f"../images/{fileinfo}.png")
+
 
 # Experiment 1: Frequency Counter
 
@@ -85,7 +112,10 @@ if __name__ == "__main__":
     ]
     print(count_similarities)
     print(np.shape(count_vector_pairs))
-    plot_sim(count_vector_pairs, fileinfo="count_vectorizer_sim")
+    plot_sim(count_vector_pairs,
+             fileinfo="count_vectorizer_sim",
+             legendinfo=[f'sim: {round(text, 3)}' for text in count_similarities],
+             titleinfo=['Best Match', 'False Positive', 'Irrelevant'])
 
     # Experiment 2: Glove Embedding
     logger.info("Experiment 2: Glove embedding")
@@ -97,7 +127,9 @@ if __name__ == "__main__":
     plot_sim(
         [[glove_vectors[0], vec] for vec in glove_vectors[1:]],
         fileinfo="glove_embedding_sim",
-    )
+        legendinfo=[f'sim: {round(text, 3)}' for text in glove_similarities],
+        titleinfo=['Best Match', 'False Positive', 'Irrelevant'])
+
 
     # Experiment 3: Google Embedding
     logger.info("Experiment 3: Google Universal Sentence Encoder")
@@ -108,4 +140,5 @@ if __name__ == "__main__":
     plot_sim(
         [[google_vectors[0], vec] for vec in google_vectors[1:]],
         fileinfo="google_encoding_sim",
-    )
+        legendinfo=[f'sim: {round(text, 3)}' for text in google_similarities],
+        titleinfo=['Best Match', 'False Positive', 'Irrelevant'])

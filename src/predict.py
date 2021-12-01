@@ -31,7 +31,8 @@ def upsample(train_df):
     negative = train_df.loc[train_df["label"] == 0]
 
     positive_upsampled = resample(
-        positive, random_state=RANDOM_STATE, n_samples=len(negative) - len(positive)
+        positive, random_state=RANDOM_STATE, n_samples=len(
+            negative) - len(positive)
     )
 
     return pd.concat([positive, positive_upsampled, negative])
@@ -105,9 +106,9 @@ def exp_ml_prediction(X_train, X_test, y_train, y_test):
 def annotate(actual, predicted):
     print(confusion_mat(actual, predicted))
 
-    print("there are %i total matches", len(actual))
-    print("there are %i actual matches", actual.sum())
-    print("predicted %i relevant matches", predicted.sum())
+    # print("there are %i total matches", len(actual))
+    # print("there are %i actual matches", actual.sum())
+    # print("predicted %i relevant matches", predicted.sum())
 
 
 def run(train, test, tdidf=False):
@@ -123,8 +124,10 @@ def run(train, test, tdidf=False):
         vectorizer.fit(corpus)
         results["vectorizer"] = vectorizer
 
-        train["news"] = train["news"].apply(lambda x: remove_low_tfidf(vectorizer, x))
-        test["news"] = test["news"].apply(lambda x: remove_low_tfidf(vectorizer, x))
+        train["news"] = train["news"].apply(
+            lambda x: remove_low_tfidf(vectorizer, x))
+        test["news"] = test["news"].apply(
+            lambda x: remove_low_tfidf(vectorizer, x))
 
     # Experiment 1: similarity cutoff
     logger.info("Experiment 1")
@@ -132,17 +135,21 @@ def run(train, test, tdidf=False):
     predicted = (labeled_similarity["sim"] > 0.3).astype(int)
     annotate(y_train, predicted)
 
+    labeled_similarity = exp_similarity_cutoff(test)
+    predicted = (labeled_similarity["sim"] > 0.3).astype(int)
+    annotate(y_test, predicted)
+
     # Experiment 2: Glove Vectors
     logger.info("Experiment 2")
 
-    X_train = train["news"].apply(get_vectors_glove) - train["wiki"].apply(
-        get_vectors_glove
-    )
+    news_vec = train["news"].apply(get_vectors_glove)
+    wiki_vec = train["wiki"].apply(get_vectors_glove)
+    X_train = news_vec - wiki_vec
     X_train = pd.DataFrame(X_train.to_list())
 
-    X_test = test["news"].apply(get_vectors_glove) - test["wiki"].apply(
-        get_vectors_glove
-    )
+    news_vec = test["news"].apply(get_vectors_glove)
+    wiki_vec = test["wiki"].apply(get_vectors_glove)
+    X_test = news_vec - wiki_vec
     X_test = pd.DataFrame(X_test.to_list())
 
     scaler_glove, lr_glove, svc_glove = exp_ml_prediction(
@@ -194,7 +201,8 @@ def save_to_json(df):
         )
         news = sub_df["news"].unique()[0]
 
-        results.append({"news": news, "relevant": relevant, "irrelevant": irrelevant})
+        results.append({"news": news, "relevant": relevant,
+                       "irrelevant": irrelevant})
 
     with open("../artifacts/results.json", "w") as f:
         json.dump(results, f)
@@ -212,7 +220,7 @@ if __name__ == "__main__":
     test = test.fillna("")
     train = upsample(train)
 
-    # models = run(train, test)
+    models = run(train, test)
     models = run(train, test, tdidf=True)
 
     # pickle files
