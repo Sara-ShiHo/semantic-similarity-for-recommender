@@ -1,6 +1,6 @@
 import joblib
 from flask import Flask
-from flask import render_template, url_for, redirect, request, jsonify
+from flask import render_template, request, jsonify
 import json
 import tensorflow_hub as hub
 import pandas as pd
@@ -35,12 +35,12 @@ def predict():
 
             wiki_df['predict'] = model.predict(X_test_scaled)
 
-            relevant = wiki_df.loc[wiki_df["predict"] == 1, "title"]
-            irrelevant = wiki_df.loc[wiki_df["predict"] == 0, "title"]
+            relevant = wiki_df.loc[wiki_df["predict"] == 1, ["title", "wiki_url"]].to_dict('records')
+            irrelevant = wiki_df.loc[wiki_df["predict"] == 0, ["title", "wiki_url"]].to_dict('records')
 
             results = [{"news": news,
-                        "relevant": list(relevant),
-                        "irrelevant": list(irrelevant)}]
+                        "relevant": relevant,
+                        "irrelevant": irrelevant}]
             return render_template('index.html', results=results)
         else:
             return render_template('index.html', message='no Wiki results found for: ' + news)

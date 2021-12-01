@@ -4,8 +4,6 @@ import requests
 import spacy
 import pandas as pd
 
-from config import NEWS_API_KEY
-
 
 def load_wiki(
     news_table,
@@ -15,14 +13,13 @@ def load_wiki(
 ):
 
     results = []
-    for _, row in news_table[["news_id", "news"]].iterrows():
-        news_id, news = row
+    for news in news_table:
 
         print("----Processing ", news[0:25])
 
         entities = news2entities(news, stop_spacy, spacy_model)
         wiki_obs = entities2wiki(entities, n_results)
-        wiki_obs["news_id"] = news_id
+        wiki_obs["news"] = news
         results.append(wiki_obs)
 
     return pd.concat(results)
@@ -54,7 +51,6 @@ def load_news(source_words=[]):
 
     news_table = pd.DataFrame(
         {
-            "news_id": [*range(len(all_news))],
             "headline": all_headlines,
             "news": all_news,
             "news_image": all_imgs,
@@ -123,7 +119,6 @@ def entities2wiki(entities, n_results=1):
             wiki = info["extract"]
             wiki = wiki_special_truncate(wiki).split("\n")[0]
             wiki = " ".join(wiki.split(" ")[0:75])
-            image = wiki_image(info)
 
             all_titles.append(title)
             all_data.append(
@@ -131,7 +126,7 @@ def entities2wiki(entities, n_results=1):
                     "entity": ent,
                     "title": info["title"],
                     "wiki": wiki,
-                    "wiki_image": image,
+                    "wiki_url": info["fullurl"],
                 }
             )
 
@@ -143,13 +138,6 @@ def wiki_special_truncate(text):
         end = text.find("==")
         return text[0:end]
     return text
-
-
-def wiki_image(data):
-    try:
-        return data["thumbnail"]["source"]
-    except KeyError:
-        return ""
 
 
 def wiki_query(query):
@@ -171,7 +159,7 @@ def wiki_content(title):
         "action": "query",
         "format": "json",
         "prop": "extracts|pageimages|info|categories",
-        "inprop": url,
+        "inprop": "url",
         "exsentences": 10,
         "explaintext": 1,
         "pithumbsize": 100,
@@ -188,10 +176,13 @@ def wiki_content(title):
 
 
 if __name__ == "__main__":
-    news_data = load_news()
-    wiki_data = load_wiki(news_data)
 
-    joined = pd.merge(news_data, wiki_data)
+    from config import NEWS_API_KEY
+
+    news_data = load_news()
+    wiki_data = load_wiki(news_data["news"].values)
+
+    joined = pd.merge(news_data, wiki_data, on="news")
     joined = joined.loc[~joined["title"].str.startswith("List of")]
 
     today_date = date.today().strftime("%m-%d-%Y")

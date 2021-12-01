@@ -186,13 +186,15 @@ def save_to_json(df):
     results = []
     for nid in df["news"].unique():
         sub_df = df.loc[df["news"] == nid]
-        relevant = sub_df.loc[sub_df["predict"] == 1, "title"].unique()
-        irrelevant = sub_df.loc[sub_df["predict"] == 0, "title"].unique()
+        relevant = sub_df.loc[sub_df["predict"] == 1, ["title", "wiki_url"]].to_dict(
+            "records"
+        )
+        irrelevant = sub_df.loc[sub_df["predict"] == 0, ["title", "wiki_url"]].to_dict(
+            "records"
+        )
         news = sub_df["news"].unique()[0]
 
-        results.append(
-            {"news": news, "relevant": list(relevant), "irrelevant": list(irrelevant)}
-        )
+        results.append({"news": news, "relevant": relevant, "irrelevant": irrelevant})
 
     with open("../artifacts/results.json", "w") as f:
         json.dump(results, f)
@@ -210,7 +212,7 @@ if __name__ == "__main__":
     test = test.fillna("")
     train = upsample(train)
 
-    models = run(train, test)
+    # models = run(train, test)
     models = run(train, test, tdidf=True)
 
     # pickle files
@@ -218,13 +220,14 @@ if __name__ == "__main__":
         save_model(value, key)
 
     # save some test data to display as a sample in the flask app
-    test2 = test2.fillna("")
-    test2["cleaned_news"] = test2["news"].apply(
+    test3 = pd.read_csv("../data/wikinews_12-01-2021.csv")
+    test3 = test3.fillna("")
+    test3["cleaned_news"] = test3["news"].apply(
         lambda x: remove_low_tfidf(models["vectorizer"], x)
     )
-    X_test = google(test2["cleaned_news"]) - google(test2["wiki"])
+    X_test = google(test3["cleaned_news"]) - google(test3["wiki"])
     X_test_scaled = models["google_scaler"].transform(X_test)
 
-    test2["predict"] = models["google_svc"].predict(X_test_scaled)
-    print(test2["predict"].value_counts())
-    save_to_json(test2)
+    test3["predict"] = models["google_svc"].predict(X_test_scaled)
+    print(test3["predict"].value_counts())
+    save_to_json(test3)

@@ -19,7 +19,7 @@
     </div>
 
     <form action="{{ url_for('predict') }}" method=post>
-        <textarea style="height:200px; width:700px" name="text"></textarea>
+        <textarea style="height:200px; width:700px" name="text" placeholder="Paste news headline here"></textarea>
         <input type="submit">
     </form>
 
@@ -29,9 +29,9 @@
     <table class="table">
         <thead>
             <tr>
-                <th style="width: 45%">News</th>
-                <th>Relevant</th>
-                <th>Irrelevant</th>
+                <th style="width: 40%">News</th>
+                <th style="width: 30%">Relevant</th>
+                <th style="width: 30%">Irrelevant</th>
             </tr>
         </thead>
 
@@ -39,14 +39,14 @@
             {% for obj in results %}
             <tr style="padding:10%">
                 <td>{{ obj.news }}</td>
-                <td style="color:darkgreen">
+                <td >
                     {% for para in obj.relevant %}
-                    <p>"{{para}}"</p>
+                    <a href="{{para.wiki_url}}"><p>{{para.title}}</p></a>
                     {% endfor %}
                 </td>
                 <td style="color:darkgoldenrod">
                     {% for para in obj.irrelevant %}
-                    <p>"{{para}}"</p>
+                    <p>{{para.title}}</p>
                     {% endfor %}
                 </td>
             </tr>
